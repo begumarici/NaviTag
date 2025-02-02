@@ -11,14 +11,20 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
     
     var categoryName: String?
     var places: [Place] = []
-
+    
     @IBOutlet weak var tableView: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         title = categoryName
         tableView.delegate = self
         tableView.dataSource = self
+        
+        styleUIElements()
+        styleNavigationBar()
+        
+        tableView.rowHeight = 60
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -26,7 +32,37 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
         loadPlacesForCategory()
     }
     
-    // MARK: - Load places for category
+    // MARK: - UI Styling Functions
+    func styleUIElements() {
+        view.backgroundColor = UIColor.backgroundCustom
+        tableView.backgroundColor = UIColor.backgroundCustom
+        tableView.separatorColor = UIColor.secondary.withAlphaComponent(0.5)
+    }
+    
+    // MARK: - Navigation Bar Styling
+    func styleNavigationBar() {
+        if let navBar = navigationController?.navigationBar, #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = UIColor.primary
+            appearance.titleTextAttributes = [
+                .foregroundColor: UIColor.white,
+                .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
+            ]
+            // make sure the navigation bar stays the same when scrolling
+            navBar.standardAppearance = appearance
+            navBar.scrollEdgeAppearance = appearance
+        } else {
+            navigationController?.navigationBar.barTintColor = UIColor.primary
+            navigationController?.navigationBar.tintColor = UIColor.white
+            navigationController?.navigationBar.titleTextAttributes = [
+                .foregroundColor: UIColor.white,
+                .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
+            ]
+        }
+    }
+    
+    // MARK: - Load Places for Category
     func loadPlacesForCategory() {
         guard let categoryName = categoryName else { return }
         
@@ -39,7 +75,7 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
         }
     }
     
-    // MARK: - save places
+    // MARK: - Save Places
     func savePlacesForCategory() {
         guard let categoryName = categoryName else { return }
         
@@ -64,10 +100,14 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
         let cell = tableView.dequeueReusableCell(withIdentifier: "PlaceCell", for: indexPath)
         let place = places[indexPath.row]
         cell.textLabel?.text = place.name
+        
+        cell.backgroundColor = UIColor.backgroundCustom
+        cell.textLabel?.textColor = UIColor.primary
+        
         return cell
     }
     
-    // MARK: - TableView Edit
+    // MARK: - TableView Editing
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (_, _, completionHandler) in
@@ -100,23 +140,22 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
             alert.addAction(cancelAction)
             self.present(alert, animated: true)
         }
-        editAction.backgroundColor = .systemBlue
+        editAction.backgroundColor = UIColor.accent
         
         return UISwipeActionsConfiguration(actions: [deleteAction, editAction])
     }
     
+    // MARK: - TableView Selection
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedPlace = places[indexPath.row]
-
+        
         if let tabBarController = self.tabBarController,
            let viewControllers = tabBarController.viewControllers,
            let mapNavController = viewControllers.first as? UINavigationController,
            let mapViewController = mapNavController.topViewController as? MapViewController {
-
+            
             mapViewController.showSelectedPlace(place: selectedPlace)
-
             tabBarController.selectedIndex = 0
         }
     }
-
 }

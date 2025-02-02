@@ -7,7 +7,6 @@
 
 import UIKit
 
-
 class FavoritesViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     @IBOutlet weak var tableView: UITableView!
@@ -20,23 +19,70 @@ class FavoritesViewController: UIViewController, UITableViewDelegate, UITableVie
         tableView.delegate = self
         tableView.dataSource = self
         tableView.rowHeight = 60
+        
         setupNavigationBar()
+        styleUIElements()
         
         loadFavoriteCategories()
 
+        styleNavigationBar()
+        
         NotificationCenter.default.addObserver(self, selector: #selector(loadFavoriteCategories), name: NSNotification.Name("FavoritesUpdated"), object: nil)
     }
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
-
     
+    
+    // MARK: - Setup Navigation Bar
     func setupNavigationBar() {
         navigationItem.title = "Favorites"
         let addCategoryButton = UIBarButtonItem(title: "+ New List", style: .plain, target: self, action: #selector(addCategoryTapped))
         navigationItem.rightBarButtonItem = addCategoryButton
     }
     
+    func styleNavigationBar() {
+        if let navBar = navigationController?.navigationBar, #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = UIColor.primary
+            appearance.titleTextAttributes = [
+                .foregroundColor: UIColor.white,
+                .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
+            ]
+            //  same appearance for both standard and scroll edge states
+            navBar.standardAppearance = appearance
+            navBar.scrollEdgeAppearance = appearance
+        } else {
+            navigationController?.navigationBar.barTintColor = UIColor.primary
+            navigationController?.navigationBar.tintColor = UIColor.white
+            navigationController?.navigationBar.titleTextAttributes = [
+                .foregroundColor: UIColor.white,
+                .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
+            ]
+        }
+    }
+
+    
+    // MARK: - UI Styling Functions
+    func styleUIElements() {
+        view.backgroundColor = UIColor.backgroundCustom
+        tableView.backgroundColor = UIColor.backgroundCustom
+        
+        if let navBar = navigationController?.navigationBar {
+            navBar.barTintColor = UIColor.primary
+            navBar.tintColor = UIColor.white
+            navBar.titleTextAttributes = [
+                .foregroundColor: UIColor.white,
+                .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
+            ]
+        }
+
+        tableView.separatorColor = UIColor.secondary.withAlphaComponent(0.5)
+    }
+    
+    // MARK: - Add Category Action
     @objc func addCategoryTapped() {
         let alert = UIAlertController(title: "New List", message: "Enter list name", preferredStyle: .alert)
         alert.addTextField { textField in
@@ -74,24 +120,27 @@ class FavoritesViewController: UIViewController, UITableViewDelegate, UITableVie
             return favoriteCategories.count
         }
     }
-
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
         let category = favoriteCategories[indexPath.row]
         cell.categoryLabel.text = category.name
+        
+        cell.backgroundColor = UIColor.backgroundCustom
+        cell.categoryLabel.textColor = UIColor.primary
+        
         return cell
     }
     
     // MARK: - Category Selection
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let category = favoriteCategories[indexPath.row]
-        
         if let placesVC = storyboard?.instantiateViewController(identifier: "PlacesViewController") as? PlacesViewController {
             placesVC.categoryName = category.name
             navigationController?.pushViewController(placesVC, animated: true)
         }
     }
-
+    
     // MARK: - TableView Editing (Delete & Edit)
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
@@ -123,7 +172,7 @@ class FavoritesViewController: UIViewController, UITableViewDelegate, UITableVie
             alert.addAction(cancelAction)
             self.present(alert, animated: true)
         }
-        editAction.backgroundColor = .systemBlue
+        editAction.backgroundColor = UIColor.accent
         
         return UISwipeActionsConfiguration(actions: [deleteAction, editAction])
     }
@@ -143,4 +192,3 @@ class FavoritesViewController: UIViewController, UITableViewDelegate, UITableVie
         tableView.reloadData()
     }
 }
-
