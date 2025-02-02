@@ -235,7 +235,15 @@ extension MapViewController: SearchResultsDelegate {
         } else {
             distanceLabel.text = "Distance could not be calculated"
         }
+        
+        saveButton.isHidden = false
+        
+        // Animate showing the info view
+        infoView.alpha = 0
         infoView.isHidden = false
+        UIView.animate(withDuration: 0.3) {
+            self.infoView.alpha = 1
+        }
     }
 }
 
@@ -293,30 +301,32 @@ extension MapViewController {
         annotation.coordinate = coordinate
         mapView.addAnnotation(annotation)
         selectedAnnotation = annotation
-
+        
         let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
         mapView.setRegion(region, animated: true)
-
+        
         placeNameLabel.text = place.name
-
         if let userLocation = locationManager.location {
             let placeLocation = CLLocation(latitude: place.latitude, longitude: place.longitude)
-            let distanceInMeters = userLocation.distance(from: placeLocation)
-            let distanceInKm = distanceInMeters / 1000.0
-            
+            let distanceInKm = userLocation.distance(from: placeLocation) / 1000.0
             distanceLabel.text = String(format: "%.1f km away", distanceInKm)
         } else {
             distanceLabel.text = "Distance could not be calculated"
         }
-
+        
+        saveButton.isHidden = true
+        
         if infoView.isHidden {
             infoView.alpha = 0
-            infoView.isHidden = false  
+            infoView.isHidden = false
             UIView.animate(withDuration: 0.3) {
                 self.infoView.alpha = 1
             }
         }
+        
+        selectedPlace = nil
     }
+
 
 
 
