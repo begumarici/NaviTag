@@ -1,0 +1,18 @@
+# macOS system files
+.DS_Store
+
+# Xcode project user-specific files
+*.xcuserstate
+*.xcworkspace
+*.xcuserdata/
+DerivedData/
+
+# Build files
+build/
+
+# Log files
+*.log
+
+# iOS Simulator files
+*.simruntime
+*.simstate
