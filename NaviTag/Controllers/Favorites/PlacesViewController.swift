@@ -7,24 +7,27 @@
 
 import UIKit
 
-class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class PlacesViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     var categoryName: String?
     var places: [Place] = []
     
-    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var collectionView: UICollectionView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         title = categoryName
-        tableView.delegate = self
-        tableView.dataSource = self
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.backgroundColor = UIColor.backgroundCustom
         
         styleUIElements()
         styleNavigationBar()
         
-        tableView.rowHeight = 60
+        loadPlacesForCategory()
+        
+        collectionView.register(PlaceCell.self, forCellWithReuseIdentifier: "PlaceCell")
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -35,8 +38,7 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
     // MARK: - UI Styling Functions
     func styleUIElements() {
         view.backgroundColor = UIColor.backgroundCustom
-        tableView.backgroundColor = UIColor.backgroundCustom
-        tableView.separatorColor = UIColor.secondary.withAlphaComponent(0.5)
+        collectionView.backgroundColor = UIColor.backgroundCustom
     }
     
     // MARK: - Navigation Bar Styling
@@ -49,7 +51,6 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
                 .foregroundColor: UIColor.white,
                 .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
             ]
-            // make sure the navigation bar stays the same when scrolling
             navBar.standardAppearance = appearance
             navBar.scrollEdgeAppearance = appearance
         } else {
@@ -61,7 +62,7 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
             ]
         }
     }
-    
+
     // MARK: - Load Places for Category
     func loadPlacesForCategory() {
         guard let categoryName = categoryName else { return }
@@ -71,7 +72,7 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
            let selectedCategory = savedCategories.first(where: { $0.name == categoryName }) {
             
             places = selectedCategory.places
-            tableView.reloadData()
+            collectionView.reloadData()
         }
     }
     
@@ -91,63 +92,92 @@ class PlacesViewController: UIViewController, UITableViewDelegate, UITableViewDa
         }
     }
     
-    // MARK: - TableView Data Source Methods
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return places.count
+    // MARK: - CollectionView Data Source Methods
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if places.isEmpty {
+            let noDataLabel = UILabel()
+            noDataLabel.text = "No places added yet!"
+            noDataLabel.textAlignment = .center
+            noDataLabel.textColor = .gray
+            collectionView.backgroundView = noDataLabel
+            return 0
+        } else {
+            collectionView.backgroundView = nil
+            return places.count
+        }
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "PlaceCell", for: indexPath)
-        let place = places[indexPath.row]
-        cell.textLabel?.text = place.name
-        
-        cell.backgroundColor = UIColor.backgroundCustom
-        cell.textLabel?.textColor = UIColor.primary
-        
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PlaceCell", for: indexPath) as! PlaceCell
+        let place = places[indexPath.item]
+        cell.configure(with: place)
         return cell
     }
     
-    // MARK: - TableView Editing
-    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        
-        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (_, _, completionHandler) in
-            self.places.remove(at: indexPath.row)
-            self.savePlacesForCategory()
-            tableView.deleteRows(at: [indexPath], with: .automatic)
-            completionHandler(true)
+    // MARK: - Context Menu for Swipe Actions (Edit/Delete)
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
+            return self.makeContextMenu(for: indexPath)
         }
-        
-        let editAction = UIContextualAction(style: .normal, title: "Edit") { (_, _, completionHandler) in
-            let alert = UIAlertController(title: "Edit Place", message: "Enter new place name", preferredStyle: .alert)
-            alert.addTextField { textField in
-                textField.text = self.places[indexPath.row].name
-            }
-            
-            let updateAction = UIAlertAction(title: "Update", style: .default) { _ in
-                if let newName = alert.textFields?.first?.text, !newName.isEmpty {
-                    self.places[indexPath.row].name = newName
-                    self.savePlacesForCategory()
-                    tableView.reloadRows(at: [indexPath], with: .automatic)
-                }
-                completionHandler(true)
-            }
-            
-            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { _ in
-                completionHandler(false)
-            }
-            
-            alert.addAction(updateAction)
-            alert.addAction(cancelAction)
-            self.present(alert, animated: true)
-        }
-        editAction.backgroundColor = UIColor.accent
-        
-        return UISwipeActionsConfiguration(actions: [deleteAction, editAction])
     }
     
-    // MARK: - TableView Selection
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let selectedPlace = places[indexPath.row]
+    private func makeContextMenu(for indexPath: IndexPath) -> UIMenu {
+        let editAction = UIAction(title: "Edit", image: UIImage(systemName: "pencil")) { _ in
+            self.editPlace(at: indexPath)
+        }
+        
+        let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { _ in
+            self.places.remove(at: indexPath.item)
+            self.savePlacesForCategory()
+            self.collectionView.deleteItems(at: [indexPath])
+        }
+        
+        return UIMenu(title: "", children: [editAction, deleteAction])
+    }
+    
+    // MARK: - Edit Place
+    func editPlace(at indexPath: IndexPath) {
+        let place = places[indexPath.item]
+        
+        let alert = UIAlertController(title: "Edit Place", message: "Enter a new name", preferredStyle: .alert)
+        alert.addTextField { textField in
+            textField.text = place.name
+        }
+        
+        let updateAction = UIAlertAction(title: "Update", style: .default) { _ in
+            if let newName = alert.textFields?.first?.text, !newName.isEmpty {
+                self.places[indexPath.item].name = newName
+                self.savePlacesForCategory()
+                self.collectionView.reloadItems(at: [indexPath])
+            }
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        
+        alert.addAction(updateAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true)
+    }
+    
+    // MARK: - CollectionView Layout (Spacing & Sizing)
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 16, left: 20, bottom: 16, right: 20)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 12
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = collectionView.frame.width - 40
+        return CGSize(width: width, height: 80)
+    }
+
+    
+    // MARK: - Selecting a Place
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let selectedPlace = places[indexPath.item]
         
         if let tabBarController = self.tabBarController,
            let viewControllers = tabBarController.viewControllers,

@@ -1,15 +1,15 @@
 //
-//  CategoryCell.swift
+//  PlaceCell.swift
 //  NaviTag
 //
-//  Created by Begüm Arıcı on 31.01.2025.
+//  Created by Begüm Arıcı on 3.02.2025.
 //
 
 import UIKit
 
-class CategoryCell: UICollectionViewCell {
+class PlaceCell: UICollectionViewCell {
     
-    let categoryLabel: UILabel = {
+    let placeLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.primary
         label.font = UIFont(name: "AvenirNext-DemiBold", size: 16)
@@ -34,15 +34,15 @@ class CategoryCell: UICollectionViewCell {
         layer.shadowOffset = CGSize(width: 0, height: 3)
         layer.shadowRadius = 5
         
-        addSubview(categoryLabel)
-        categoryLabel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(placeLabel)
+        placeLabel.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            categoryLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            categoryLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16)
+            placeLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+            placeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16)
         ])
     }
     
-    func configure(with category: FavoriteCategory) {
-        categoryLabel.text = category.name
+    func configure(with place: Place) {
+        placeLabel.text = place.name
     }
 }

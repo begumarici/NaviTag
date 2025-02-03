@@ -7,25 +7,25 @@
 
 import UIKit
 
-class FavoritesViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class FavoritesViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
-    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var collectionView: UICollectionView!
     
     var favoriteCategories: [FavoriteCategory] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.rowHeight = 60
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.backgroundColor = UIColor.backgroundCustom
         
         setupNavigationBar()
         styleUIElements()
         
         loadFavoriteCategories()
 
-        styleNavigationBar()
+        collectionView.register(CategoryCell.self, forCellWithReuseIdentifier: "CategoryCell")
         
         NotificationCenter.default.addObserver(self, selector: #selector(loadFavoriteCategories), name: NSNotification.Name("FavoritesUpdated"), object: nil)
     }
@@ -34,52 +34,17 @@ class FavoritesViewController: UIViewController, UITableViewDelegate, UITableVie
         NotificationCenter.default.removeObserver(self)
     }
     
-    
     // MARK: - Setup Navigation Bar
     func setupNavigationBar() {
         navigationItem.title = "Favorites"
-        let addCategoryButton = UIBarButtonItem(title: "+ New List", style: .plain, target: self, action: #selector(addCategoryTapped))
+        let addCategoryButton = UIBarButtonItem(title: "+", style: .plain, target: self, action: #selector(addCategoryTapped))
         navigationItem.rightBarButtonItem = addCategoryButton
     }
-    
-    func styleNavigationBar() {
-        if let navBar = navigationController?.navigationBar, #available(iOS 13.0, *) {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor.primary
-            appearance.titleTextAttributes = [
-                .foregroundColor: UIColor.white,
-                .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
-            ]
-            //  same appearance for both standard and scroll edge states
-            navBar.standardAppearance = appearance
-            navBar.scrollEdgeAppearance = appearance
-        } else {
-            navigationController?.navigationBar.barTintColor = UIColor.primary
-            navigationController?.navigationBar.tintColor = UIColor.white
-            navigationController?.navigationBar.titleTextAttributes = [
-                .foregroundColor: UIColor.white,
-                .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
-            ]
-        }
-    }
-
     
     // MARK: - UI Styling Functions
     func styleUIElements() {
         view.backgroundColor = UIColor.backgroundCustom
-        tableView.backgroundColor = UIColor.backgroundCustom
-        
-        if let navBar = navigationController?.navigationBar {
-            navBar.barTintColor = UIColor.primary
-            navBar.tintColor = UIColor.white
-            navBar.titleTextAttributes = [
-                .foregroundColor: UIColor.white,
-                .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
-            ]
-        }
-
-        tableView.separatorColor = UIColor.secondary.withAlphaComponent(0.5)
+        collectionView.backgroundColor = UIColor.backgroundCustom
     }
     
     // MARK: - Add Category Action
@@ -93,7 +58,7 @@ class FavoritesViewController: UIViewController, UITableViewDelegate, UITableVie
             if let categoryName = alert.textFields?.first?.text, !categoryName.isEmpty {
                 let newCategory = FavoriteCategory(name: categoryName, icon: "folder.fill", places: [])
                 self.favoriteCategories.append(newCategory)
-                self.tableView.reloadData()
+                self.collectionView.reloadData()
                 self.saveFavoriteCategories()
             }
         }
@@ -106,75 +71,97 @@ class FavoritesViewController: UIViewController, UITableViewDelegate, UITableVie
         present(alert, animated: true)
     }
     
-    // MARK: - TableView Data Source Methods
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    // MARK: - CollectionView Data Source Methods
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if favoriteCategories.isEmpty {
             let noDataLabel = UILabel()
             noDataLabel.text = "No categories yet. Create one!"
             noDataLabel.textAlignment = .center
             noDataLabel.textColor = .gray
-            tableView.backgroundView = noDataLabel
+            noDataLabel.frame = collectionView.bounds
+            collectionView.backgroundView = noDataLabel
             return 0
         } else {
-            tableView.backgroundView = nil
+            collectionView.backgroundView = nil
             return favoriteCategories.count
         }
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
-        let category = favoriteCategories[indexPath.row]
-        cell.categoryLabel.text = category.name
-        
-        cell.backgroundColor = UIColor.backgroundCustom
-        cell.categoryLabel.textColor = UIColor.primary
-        
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
+        let category = favoriteCategories[indexPath.item]
+        cell.configure(with: category)
         return cell
     }
     
+    // MARK: - Context Menu for Swipe Actions
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
+            return self.makeContextMenu(for: indexPath)
+        }
+    }
+    
+    private func makeContextMenu(for indexPath: IndexPath) -> UIMenu {
+        let editAction = UIAction(title: "Edit", image: UIImage(systemName: "pencil"), identifier: nil, discoverabilityTitle: nil, attributes: [], state: .off) { _ in
+            self.editCategory(at: indexPath)
+        }
+        
+        let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), identifier: nil, discoverabilityTitle: nil, attributes: .destructive, state: .off) { _ in
+            self.favoriteCategories.remove(at: indexPath.item)
+            self.saveFavoriteCategories()
+            self.collectionView.deleteItems(at: [indexPath])
+        }
+        
+        return UIMenu(title: "", children: [editAction, deleteAction])
+    }
+    
+    // MARK: - Edit Category
+    func editCategory(at indexPath: IndexPath) {
+        let category = favoriteCategories[indexPath.item]
+        
+        let alert = UIAlertController(title: "Edit Category", message: "Enter a new name", preferredStyle: .alert)
+        alert.addTextField { textField in
+            textField.text = category.name
+        }
+        
+        let updateAction = UIAlertAction(title: "Update", style: .default) { _ in
+            if let newName = alert.textFields?.first?.text, !newName.isEmpty {
+                self.favoriteCategories[indexPath.item].name = newName
+                self.saveFavoriteCategories()
+                self.collectionView.reloadItems(at: [indexPath])
+            }
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        
+        alert.addAction(updateAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true)
+    }
+    
+    // MARK: - CollectionView Layout
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 16, left: 20, bottom: 16, right: 20)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 12
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = collectionView.frame.width - 40
+        return CGSize(width: width, height: 80)
+    }
+
+    
     // MARK: - Category Selection
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let category = favoriteCategories[indexPath.row]
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let category = favoriteCategories[indexPath.item]
         if let placesVC = storyboard?.instantiateViewController(identifier: "PlacesViewController") as? PlacesViewController {
             placesVC.categoryName = category.name
             navigationController?.pushViewController(placesVC, animated: true)
         }
-    }
-    
-    // MARK: - TableView Editing (Delete & Edit)
-    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        
-        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (action, view, completionHandler) in
-            self.favoriteCategories.remove(at: indexPath.row)
-            self.saveFavoriteCategories()
-            tableView.deleteRows(at: [indexPath], with: .automatic)
-            completionHandler(true)
-        }
-        
-        let editAction = UIContextualAction(style: .normal, title: "Edit") { (action, view, completionHandler) in
-            let category = self.favoriteCategories[indexPath.row]
-            let alert = UIAlertController(title: "Edit List", message: "Enter new list name", preferredStyle: .alert)
-            alert.addTextField { textField in
-                textField.text = category.name
-            }
-            let updateAction = UIAlertAction(title: "Update", style: .default) { _ in
-                if let newName = alert.textFields?.first?.text, !newName.isEmpty {
-                    self.favoriteCategories[indexPath.row].name = newName
-                    self.saveFavoriteCategories()
-                    tableView.reloadRows(at: [indexPath], with: .automatic)
-                }
-                completionHandler(true)
-            }
-            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { _ in
-                completionHandler(false)
-            }
-            alert.addAction(updateAction)
-            alert.addAction(cancelAction)
-            self.present(alert, animated: true)
-        }
-        editAction.backgroundColor = UIColor.accent
-        
-        return UISwipeActionsConfiguration(actions: [deleteAction, editAction])
     }
     
     // MARK: - Persistence Methods
@@ -189,6 +176,6 @@ class FavoritesViewController: UIViewController, UITableViewDelegate, UITableVie
            let savedCategories = try? JSONDecoder().decode([FavoriteCategory].self, from: savedData) {
             favoriteCategories = savedCategories
         }
-        tableView.reloadData()
+        collectionView.reloadData()
     }
 }
