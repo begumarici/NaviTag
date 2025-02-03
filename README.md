@@ -26,5 +26,6 @@ NaviTag is an iOS app that lets users search for locations, view them on a map, 
 
 ## Screenshots
 
-<img src="https://github.com/user-attachments/assets/cd99718f-7d5d-4411-84a6-70a001ff40e2" alt="IMG_0410" width="300">
-<img src="https://github.com/user-attachments/assets/1f514f8b-819e-4dd2-84c0-5774ad854174" alt="IMG_0412" width="300">
+<img src="https://github.com/user-attachments/assets/5643732f-7581-45c2-a2c1-9dcb243be508" alt="IMG_0442" width="300">
+<img src="https://github.com/user-attachments/assets/86468553-eed2-493b-a765-06cd2fee70c8" alt="IMG_0443" width="300">
+<img src="https://github.com/user-attachments/assets/153fcb9b-0a35-40d0-83b4-da8ad313e897" alt="IMG_0444" width="300">

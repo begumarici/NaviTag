@@ -158,6 +158,8 @@
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="b0m-NB-Jno">
                         <rect key="frame" x="0.0" y="59" width="393" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <color key="tintColor" red="0.93626517060000003" green="0.91481006149999999" blue="0.83525818590000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="barTintColor" red="0.801077178" green="0.022492702650000002" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
                     <connections>
