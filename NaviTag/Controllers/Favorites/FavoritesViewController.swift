@@ -20,7 +20,7 @@ class FavoritesViewController: UIViewController, UICollectionViewDelegate, UICol
         collectionView.dataSource = self
         collectionView.backgroundColor = UIColor.backgroundCustom
         
-        setupNavigationBar()
+        setupNavigationBar(title: "Favorites")
         styleUIElements()
         
         loadFavoriteCategories()
@@ -32,13 +32,6 @@ class FavoritesViewController: UIViewController, UICollectionViewDelegate, UICol
     
     deinit {
         NotificationCenter.default.removeObserver(self)
-    }
-    
-    // MARK: - Setup Navigation Bar
-    func setupNavigationBar() {
-        navigationItem.title = "Favorites"
-        let addCategoryButton = UIBarButtonItem(title: "+", style: .plain, target: self, action: #selector(addCategoryTapped))
-        navigationItem.rightBarButtonItem = addCategoryButton
     }
     
     // MARK: - UI Styling Functions
