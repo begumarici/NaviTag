@@ -18,6 +18,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     @IBOutlet weak var closeButton: UIButton!
     @IBOutlet weak var locationButton: UIButton!
     @IBOutlet weak var saveButton: UIButton!
+    @IBOutlet weak var directionsButton: UIButton!
     
     // MARK: - Variables
     var locationManager = CLLocationManager()
@@ -45,6 +46,9 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         infoView.alpha = 1
         
         saveButton.addTarget(self, action: #selector(savePlaceTapped), for: .touchUpInside)
+        directionsButton.addTarget(self, action: #selector(getDirectionsTapped), for: .touchUpInside)
+        
+        styleButtons()
     }
     
     // MARK: - Setup Functions
@@ -67,7 +71,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     func styleUIElements() {
         styleInfoView()
         styleLocationButton()
-        styleSaveButton()
+        styleButtons()
         styleCloseButton()
         styleLabels()
     }
@@ -93,16 +97,29 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         locationButton.layer.shadowRadius = 4
     }
     
-    func styleSaveButton() {
-        saveButton.backgroundColor = UIColor.accent
-        saveButton.layer.cornerRadius = 16
-        saveButton.setTitleColor(.white, for: .normal)
-        saveButton.layer.masksToBounds = true
+    func styleButtons() {
+        styleButton(saveButton, backgroundColor: UIColor.accent, title: "Save Place", iconName: "bookmark.fill")
+        styleButton(directionsButton, backgroundColor: UIColor.primary, title: "Get Directions", iconName: "arrow.triangle.turn.up.right.circle.fill")
+    }
+    
+    func styleButton(_ button: UIButton, backgroundColor: UIColor, title: String, iconName: String) {
+        button.backgroundColor = backgroundColor
+        button.layer.cornerRadius = 16
+        button.setTitleColor(.white, for: .normal)
+        button.layer.masksToBounds = true
         
-        saveButton.layer.shadowColor = UIColor.black.cgColor
-        saveButton.layer.shadowOpacity = 0.3
-        saveButton.layer.shadowOffset = CGSize(width: 0, height: 2)
-        saveButton.layer.shadowRadius = 4
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = 0.3
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowRadius = 4
+        
+        button.setTitle(title, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        
+        let image = UIImage(systemName: iconName)?.withTintColor(.white, renderingMode: .alwaysOriginal)
+        button.setImage(image, for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -5, bottom: 0, right: 5)
     }
     
     func styleCloseButton() {
@@ -173,6 +190,46 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
                                         latitudinalMeters: 1000,
                                         longitudinalMeters: 1000)
         mapView.setRegion(region, animated: true)
+    }
+    
+    // MARK: - Navigation (Google & Apple Maps)
+    @objc func getDirectionsTapped() {
+        guard let place = selectedPlace else { return }
+        showDirectionsOptions()
+    }
+    
+    func showDirectionsOptions() {
+        guard let place = selectedPlace else { return }
+        
+        let latitude = place.placemark.coordinate.latitude
+        let longitude = place.placemark.coordinate.longitude
+
+        let alert = UIAlertController(title: "Open in Maps", message: "Choose navigation app", preferredStyle: .actionSheet)
+
+        alert.addAction(UIAlertAction(title: "Google Maps", style: .default) { _ in
+            self.openGoogleMaps(latitude: latitude, longitude: longitude)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Apple Maps", style: .default) { _ in
+            self.openAppleMaps(latitude: latitude, longitude: longitude)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        present(alert, animated: true)
+    }
+        
+    func openGoogleMaps(latitude: Double, longitude: Double) {
+        let googleMapsURL = "comgooglemaps://?daddr=\(latitude),\(longitude)&directionsmode=driving"
+        if let url = URL(string: googleMapsURL), UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        }
+    }
+        
+    func openAppleMaps(latitude: Double, longitude: Double) {
+        let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
     }
 }
 
@@ -372,6 +429,7 @@ extension MapViewController {
                 self.infoView.alpha = 1
             }
         }
-        selectedPlace = nil
+        selectedPlace = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        selectedPlace?.name = place.name
     }
 }

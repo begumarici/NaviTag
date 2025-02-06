@@ -45,30 +45,33 @@
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RPH-ck-LgM">
-                                        <rect key="frame" x="263" y="125" width="90" height="28"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="28" id="ZS9-NI-O47"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                        <color key="tintColor" red="0.93626517060000003" green="0.91481006149999999" blue="0.83525818590000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                        <state key="normal" title="Save Place"/>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pUZ-xR-b39">
+                                        <rect key="frame" x="258" y="122" width="95" height="31"/>
+                                        <state key="normal" title="Button"/>
                                         <buttonConfiguration key="configuration" style="plain" title="Save Place">
-                                            <fontDescription key="titleFontDescription" type="system" pointSize="13"/>
+                                            <fontDescription key="titleFontDescription" type="system" pointSize="14"/>
+                                        </buttonConfiguration>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cHr-Zv-6dC">
+                                        <rect key="frame" x="8" y="122" width="115" height="31"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="Get directions">
+                                            <fontDescription key="titleFontDescription" type="system" pointSize="14"/>
                                         </buttonConfiguration>
                                     </button>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
-                                    <constraint firstItem="RPH-ck-LgM" firstAttribute="bottom" secondItem="yNJ-F7-10i" secondAttribute="bottomMargin" id="3hd-M3-5VT"/>
+                                    <constraint firstItem="pUZ-xR-b39" firstAttribute="trailing" secondItem="tt4-hS-TLM" secondAttribute="trailing" id="1sK-Os-5ha"/>
                                     <constraint firstItem="VWY-f3-aSK" firstAttribute="top" secondItem="A3m-e6-9s0" secondAttribute="bottom" constant="8" id="3yx-Vl-hxi"/>
                                     <constraint firstItem="tt4-hS-TLM" firstAttribute="trailing" secondItem="yNJ-F7-10i" secondAttribute="trailingMargin" id="99Y-wF-dVn"/>
-                                    <constraint firstItem="RPH-ck-LgM" firstAttribute="trailing" secondItem="tt4-hS-TLM" secondAttribute="trailing" id="CBs-ek-4al"/>
                                     <constraint firstItem="VWY-f3-aSK" firstAttribute="centerX" secondItem="yNJ-F7-10i" secondAttribute="centerX" id="Efd-ew-Dut"/>
+                                    <constraint firstItem="pUZ-xR-b39" firstAttribute="baseline" secondItem="cHr-Zv-6dC" secondAttribute="baseline" id="Jf4-HN-4Eu"/>
+                                    <constraint firstItem="pUZ-xR-b39" firstAttribute="bottom" secondItem="yNJ-F7-10i" secondAttribute="bottomMargin" id="LjV-Ms-Mii"/>
                                     <constraint firstItem="tt4-hS-TLM" firstAttribute="top" secondItem="yNJ-F7-10i" secondAttribute="topMargin" id="UNs-Bh-NBF"/>
                                     <constraint firstItem="A3m-e6-9s0" firstAttribute="top" secondItem="yNJ-F7-10i" secondAttribute="top" constant="62" id="fMV-sF-giS"/>
                                     <constraint firstItem="A3m-e6-9s0" firstAttribute="centerX" secondItem="VWY-f3-aSK" secondAttribute="centerX" id="nhA-uW-xRa"/>
+                                    <constraint firstItem="cHr-Zv-6dC" firstAttribute="leading" secondItem="yNJ-F7-10i" secondAttribute="leadingMargin" id="rc5-i3-UEk"/>
                                 </constraints>
                             </view>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zYJ-JE-uQd">
@@ -101,12 +104,13 @@
                     </navigationItem>
                     <connections>
                         <outlet property="closeButton" destination="tt4-hS-TLM" id="5lU-OU-keI"/>
+                        <outlet property="directionsButton" destination="cHr-Zv-6dC" id="vdl-NZ-f0m"/>
                         <outlet property="distanceLabel" destination="VWY-f3-aSK" id="kf1-hy-W1J"/>
                         <outlet property="infoView" destination="yNJ-F7-10i" id="YIe-7W-Jif"/>
                         <outlet property="locationButton" destination="zYJ-JE-uQd" id="fRF-Hd-yKB"/>
                         <outlet property="mapView" destination="rpF-au-XTv" id="dGh-98-EIV"/>
                         <outlet property="placeNameLabel" destination="A3m-e6-9s0" id="HU9-Sn-aBQ"/>
-                        <outlet property="saveButton" destination="RPH-ck-LgM" id="WQU-1y-GeU"/>
+                        <outlet property="saveButton" destination="pUZ-xR-b39" id="Njf-Rq-iQI"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="023-EN-a7e" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

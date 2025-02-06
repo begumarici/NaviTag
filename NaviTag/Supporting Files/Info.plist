@@ -27,5 +27,10 @@
     <key>NSLocationAlwaysUsageDescription</key>
     <string>We need your location to save your favorite places.</string>
 
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>comgooglemaps</string>
+    </array>
+
 </dict>
 </plist>
