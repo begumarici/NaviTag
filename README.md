@@ -37,7 +37,8 @@ NaviTag is an **iOS app** that allows users to search for locations, view them o
 - Google & Apple Maps integration for navigation.
 - UserDefaults for storing favorite places.
 
-## Screenshots
+## Screenshots
+
 <img src="https://github.com/user-attachments/assets/0381bce2-08a4-41a1-9659-8f22006f0dba" alt="IMG_0465" width="300">
 <img src="https://github.com/user-attachments/assets/64c4453e-482b-410b-bf5c-66c3d61aaf96" alt="IMG_0464" width="300">
 <img src="https://github.com/user-attachments/assets/86468553-eed2-493b-a765-06cd2fee70c8" alt="IMG_0443" width="300">
