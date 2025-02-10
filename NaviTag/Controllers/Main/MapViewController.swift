@@ -151,23 +151,28 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     
     // MARK: - Action Methods
     @objc func openSearch() {
-        searchController = UISearchController(searchResultsController: SearchResultsViewController())
-        searchController.searchResultsUpdater = self
-        searchController.searchBar.delegate = self
-        
-        searchController.searchBar.tintColor = UIColor.white
-        searchController.searchBar.barTintColor = UIColor.primary
-        
-        if #available(iOS 13.0, *) {
-            let searchTextField = searchController.searchBar.searchTextField
-            searchTextField.textColor = .black
-            searchTextField.backgroundColor = UIColor.backgroundCustom.withAlphaComponent(0.9)
-            searchTextField.attributedPlaceholder = NSAttributedString(string: "Search",
-                                                                         attributes: [NSAttributedString.Key.foregroundColor: UIColor.darkGray])
+        DispatchQueue.main.async {
+            self.searchController = UISearchController(searchResultsController: SearchResultsViewController())
+            self.searchController.searchResultsUpdater = self
+            self.searchController.searchBar.delegate = self
+
+            self.searchController.searchBar.tintColor = UIColor.white
+            self.searchController.searchBar.barTintColor = UIColor.primary
+
+            if #available(iOS 13.0, *) {
+                let searchTextField = self.searchController.searchBar.searchTextField
+                searchTextField.textColor = .black
+                searchTextField.backgroundColor = UIColor.backgroundCustom.withAlphaComponent(0.9)
+                searchTextField.attributedPlaceholder = NSAttributedString(
+                    string: "Search",
+                    attributes: [NSAttributedString.Key.foregroundColor: UIColor.darkGray]
+                )
+            }
+
+            self.present(self.searchController, animated: true, completion: nil)
         }
-        
-        present(searchController, animated: true, completion: nil)
     }
+
     
     @IBAction func closeInfoView(_ sender: UIButton) {
         if let annotation = selectedAnnotation {

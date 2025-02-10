@@ -20,13 +20,17 @@ class SearchResultsViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "SearchResultCell")
-        
-        self.view.backgroundColor = UIColor.backgroundCustom
-        tableView.backgroundColor = UIColor.backgroundCustom
-        
-        tableView.separatorColor = UIColor.secondary.withAlphaComponent(0.5)
+        DispatchQueue.global(qos: .background).async {
+            DispatchQueue.main.async {
+                self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "SearchResultCell")
+
+                self.view.backgroundColor = UIColor.backgroundCustom
+                self.tableView.backgroundColor = UIColor.backgroundCustom
+                self.tableView.separatorColor = UIColor.secondary.withAlphaComponent(0.5)
+            }
+        }
     }
+
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return searchResults.count
