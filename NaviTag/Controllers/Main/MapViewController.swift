@@ -8,7 +8,7 @@
 import UIKit
 import MapKit
 
-class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDelegate, UISearchBarDelegate, UIPickerViewDelegate, UIPickerViewDataSource {
+class MapViewController: UIViewController {
     
     // MARK: - IBOutlets
     @IBOutlet weak var mapView: MKMapView!
@@ -28,15 +28,17 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     var selectedCategory: String?
     var categoryTextField: UITextField?
     var pickerView = UIPickerView()
+    var pickerViewHelper = PickerViewHelper()
     
     // MARK: - Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
+        infoView.isHidden = true
         
-        mapView.delegate = self
         setupLocationManager()
         setupNavigationBar()
-        infoView.isHidden = true
+        setupPickerView()
+        setupSearchBar()
         
         setupUIElements(
             infoView: infoView,
@@ -65,31 +67,25 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         searchButton.tintColor = UIColor.white
         navigationItem.rightBarButtonItem = searchButton
     }
-        
-    // MARK: - Action Methods
-    @objc func openSearch() {
-        DispatchQueue.main.async {
-            self.searchController = UISearchController(searchResultsController: SearchResultsViewController())
-            self.searchController.searchResultsUpdater = self
-            self.searchController.searchBar.delegate = self
-
-            self.searchController.searchBar.tintColor = UIColor.white
-            self.searchController.searchBar.barTintColor = UIColor.primary
-
-            if #available(iOS 13.0, *) {
-                let searchTextField = self.searchController.searchBar.searchTextField
-                searchTextField.textColor = .black
-                searchTextField.backgroundColor = UIColor.backgroundCustom.withAlphaComponent(0.9)
-                searchTextField.attributedPlaceholder = NSAttributedString(
-                    string: "Search",
-                    attributes: [NSAttributedString.Key.foregroundColor: UIColor.darkGray]
-                )
-            }
-
-            self.present(self.searchController, animated: true, completion: nil)
+    
+    func setupPickerView() {
+        pickerView.delegate = pickerViewHelper
+        pickerView.dataSource = pickerViewHelper
+        pickerViewHelper.categories = loadCategories()
+        pickerViewHelper.onCategorySelected = { selected in
+            self.categoryTextField?.text = selected
+            self.categoryTextField?.resignFirstResponder()
         }
     }
-
+    
+    func setupSearchBar() {
+        searchController = UISearchController(searchResultsController: SearchResultsViewController())
+        searchController.searchResultsUpdater = self
+        searchController.searchBar.delegate = self
+        navigationItem.searchController = searchController
+    }
+    
+   
     
     @IBAction func closeInfoView(_ sender: UIButton) {
         if let annotation = selectedAnnotation {
@@ -114,11 +110,11 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         mapView.setRegion(region, animated: true)
     }
     
-    // MARK: - Navigation (Google & Apple Maps)
-    @objc func getDirectionsTapped() {
+    @IBAction func getDirectionsTapped(_ sender: UIButton) {
         guard let place = selectedPlace else { return }
         showDirectionsOptions()
     }
+    
     
     func showDirectionsOptions() {
         guard let place = selectedPlace else { return }
@@ -129,31 +125,60 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         let alert = UIAlertController(title: "Open in Maps", message: "Choose navigation app", preferredStyle: .actionSheet)
 
         alert.addAction(UIAlertAction(title: "Google Maps", style: .default) { _ in
-            self.openGoogleMaps(latitude: latitude, longitude: longitude)
+            NavigationHelper.openGoogleMaps(latitude: latitude, longitude: longitude)
         })
         
         alert.addAction(UIAlertAction(title: "Apple Maps", style: .default) { _ in
-            self.openAppleMaps(latitude: latitude, longitude: longitude)
+            NavigationHelper.openAppleMaps(latitude: latitude, longitude: longitude)
         })
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         
         present(alert, animated: true)
     }
-        
-    func openGoogleMaps(latitude: Double, longitude: Double) {
-        let googleMapsURL = "comgooglemaps://?daddr=\(latitude),\(longitude)&directionsmode=driving"
-        if let url = URL(string: googleMapsURL), UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url)
+}
+
+// MARK: - SearchBar
+extension MapViewController: UISearchBarDelegate {
+@objc func openSearch() {
+    DispatchQueue.main.async {
+        self.searchController = UISearchController(searchResultsController: SearchResultsViewController())
+        self.searchController.searchResultsUpdater = self
+        self.searchController.searchBar.delegate = self
+
+        self.searchController.searchBar.tintColor = UIColor.white
+        self.searchController.searchBar.barTintColor = UIColor.primary
+
+        if #available(iOS 13.0, *) {
+            let searchTextField = self.searchController.searchBar.searchTextField
+            searchTextField.textColor = .black
+            searchTextField.backgroundColor = UIColor.backgroundCustom.withAlphaComponent(0.9)
+            searchTextField.attributedPlaceholder = NSAttributedString(
+                string: "Search",
+                attributes: [NSAttributedString.Key.foregroundColor: UIColor.darkGray]
+            )
+        }
+
+        self.present(self.searchController, animated: true, completion: nil)
+    }
+
+}
+}
+
+// MARK: - Location MAnager
+extension MapViewController: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let userLocation = locations.last {
+            let region = MKCoordinateRegion(center: userLocation.coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
+            mapView.setRegion(region, animated: true)
         }
     }
-        
-    func openAppleMaps(latitude: Double, longitude: Double) {
-        let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
-        mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Failed to find user's location: \(error.localizedDescription)")
     }
 }
+
 
 // MARK: - Save Place
 extension MapViewController {
@@ -273,85 +298,5 @@ extension MapViewController: SearchResultsDelegate {
         UIView.animate(withDuration: 0.3) {
             self.infoView.alpha = 1
         }
-    }
-}
-
-// MARK: - UIPickerViewDelegate and UIPickerViewDataSource
-extension MapViewController {
-    func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        return loadCategories().count + 1
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        let categoryNames = loadCategories().map { $0.name } + ["+ New Category"]
-        return categoryNames[row]
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        let categoryNames = loadCategories().map { $0.name } + ["+ New Category"]
-        let selected = categoryNames[row]
-        DispatchQueue.main.async {
-            if selected == "+ New Category" {
-                self.categoryTextField?.text = ""
-                self.categoryTextField?.inputView = nil
-                self.categoryTextField?.keyboardType = .default
-                self.categoryTextField?.reloadInputViews()
-                self.categoryTextField?.becomeFirstResponder()
-            } else {
-                self.categoryTextField?.text = selected
-                self.categoryTextField?.resignFirstResponder()
-            }
-        }
-    }
-    
-    @objc func categoryTextFieldTapped(_ textField: UITextField) {
-        if textField.inputView == nil {
-            textField.inputView = pickerView
-            textField.reloadInputViews()
-        }
-    }
-    
-    func showSelectedPlace(place: Place) {
-        let coordinate = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
-        
-        if let annotation = selectedAnnotation {
-            mapView.removeAnnotation(annotation)
-        }
-        
-        let annotation = MKPointAnnotation()
-        annotation.title = place.name
-        annotation.coordinate = coordinate
-        mapView.addAnnotation(annotation)
-        selectedAnnotation = annotation
-        
-        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
-        mapView.setRegion(region, animated: true)
-        
-        placeNameLabel.text = place.name
-        if let userLocation = locationManager.location {
-            let placeLocation = CLLocation(latitude: place.latitude, longitude: place.longitude)
-            let distanceInKm = userLocation.distance(from: placeLocation) / 1000.0
-            distanceLabel.text = String(format: "%.1f km away", distanceInKm)
-        } else {
-            distanceLabel.text = "Distance could not be calculated"
-        }
-        
-        saveButton.isHidden = true
-        placeNameLabel.textColor = UIColor.black
-        distanceLabel.textColor = UIColor.black
-        
-        if infoView.isHidden {
-            infoView.alpha = 0
-            infoView.isHidden = false
-            UIView.animate(withDuration: 0.3) {
-                self.infoView.alpha = 1
-            }
-        }
-        selectedPlace = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
-        selectedPlace?.name = place.name
     }
 }
