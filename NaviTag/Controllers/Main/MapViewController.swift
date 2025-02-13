@@ -82,7 +82,6 @@ class MapViewController: UIViewController {
         searchController = UISearchController(searchResultsController: SearchResultsViewController())
         searchController.searchResultsUpdater = self
         searchController.searchBar.delegate = self
-        navigationItem.searchController = searchController
     }
     
    
@@ -136,6 +135,47 @@ class MapViewController: UIViewController {
         
         present(alert, animated: true)
     }
+    
+    func showSelectedPlace(place: Place) {
+        let coordinate = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+        
+        if let annotation = selectedAnnotation {
+            mapView.removeAnnotation(annotation)
+        }
+        
+        let annotation = MKPointAnnotation()
+        annotation.title = place.name
+        annotation.coordinate = coordinate
+        mapView.addAnnotation(annotation)
+        selectedAnnotation = annotation
+        
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
+        mapView.setRegion(region, animated: true)
+        
+        placeNameLabel.text = place.name
+        if let userLocation = locationManager.location {
+            let placeLocation = CLLocation(latitude: place.latitude, longitude: place.longitude)
+            let distanceInKm = userLocation.distance(from: placeLocation) / 1000.0
+            distanceLabel.text = String(format: "%.1f km away", distanceInKm)
+        } else {
+            distanceLabel.text = "Distance could not be calculated"
+        }
+        
+        saveButton.isHidden = true
+        placeNameLabel.textColor = UIColor.black
+        distanceLabel.textColor = UIColor.black
+        
+        if infoView.isHidden {
+            infoView.alpha = 0
+            infoView.isHidden = false
+            UIView.animate(withDuration: 0.3) {
+                self.infoView.alpha = 1
+            }
+        }
+        selectedPlace = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        selectedPlace?.name = place.name
+    }
+
 }
 
 // MARK: - SearchBar
