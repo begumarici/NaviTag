@@ -36,19 +36,18 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         mapView.delegate = self
         setupLocationManager()
         setupNavigationBar()
-        styleUIElements()
-        styleNavigationBarAppearance()
-        
-        pickerView.delegate = self
-        pickerView.dataSource = self
-        
         infoView.isHidden = true
-        infoView.alpha = 1
         
-        saveButton.addTarget(self, action: #selector(savePlaceTapped), for: .touchUpInside)
-        directionsButton.addTarget(self, action: #selector(getDirectionsTapped), for: .touchUpInside)
-        
-        styleButtons()
+        setupUIElements(
+            infoView: infoView,
+            locationButton: locationButton,
+            saveButton: saveButton,
+            directionsButton: directionsButton,
+            closeButton: closeButton,
+            placeNameLabel: placeNameLabel,
+            distanceLabel: distanceLabel,
+            navigationBar: navigationController?.navigationBar
+        )
     }
     
     // MARK: - Setup Functions
@@ -66,89 +65,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         searchButton.tintColor = UIColor.white
         navigationItem.rightBarButtonItem = searchButton
     }
-    
-    // MARK: - Design Functions
-    func styleUIElements() {
-        styleInfoView()
-        styleLocationButton()
-        styleButtons()
-        styleCloseButton()
-        styleLabels()
-    }
-    
-    func styleInfoView() {
-        infoView.layer.cornerRadius = 16
-        infoView.layer.shadowColor = UIColor.black.cgColor
-        infoView.layer.shadowOpacity = 0.2
-        infoView.layer.shadowRadius = 10
-        infoView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        infoView.backgroundColor = UIColor.backgroundCustom.withAlphaComponent(0.95)
-    }
-    
-    func styleLocationButton() {
-        locationButton.backgroundColor = UIColor.primary
-        locationButton.layer.cornerRadius = 16
-        locationButton.setTitleColor(.white, for: .normal)
-        locationButton.layer.masksToBounds = true
         
-        locationButton.layer.shadowColor = UIColor.black.cgColor
-        locationButton.layer.shadowOpacity = 0.3
-        locationButton.layer.shadowOffset = CGSize(width: 0, height: 2)
-        locationButton.layer.shadowRadius = 4
-    }
-    
-    func styleButtons() {
-        styleButton(saveButton, backgroundColor: UIColor.accent, title: "Save Place", iconName: "bookmark.fill")
-        styleButton(directionsButton, backgroundColor: UIColor.primary, title: "Get Directions", iconName: "arrow.triangle.turn.up.right.circle.fill")
-    }
-    
-    func styleButton(_ button: UIButton, backgroundColor: UIColor, title: String, iconName: String) {
-        button.backgroundColor = backgroundColor
-        button.layer.cornerRadius = 16
-        button.setTitleColor(.white, for: .normal)
-        button.layer.masksToBounds = true
-        
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.3
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowRadius = 4
-        
-        button.setTitle(title, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        
-        let image = UIImage(systemName: iconName)?.withTintColor(.white, renderingMode: .alwaysOriginal)
-        button.setImage(image, for: .normal)
-        button.imageView?.contentMode = .scaleAspectFit
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -5, bottom: 0, right: 5)
-    }
-    
-    func styleCloseButton() {
-        closeButton.setTitle("", for: .normal)
-        closeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-        closeButton.tintColor = UIColor.secondary
-    }
-    
-    func styleLabels() {
-        placeNameLabel.font = UIFont.boldSystemFont(ofSize: 18)
-        placeNameLabel.textColor = .label
-        distanceLabel.font = UIFont.systemFont(ofSize: 14)
-        distanceLabel.textColor = .secondaryLabel
-    }
-    
-    func styleNavigationBarAppearance() {
-        if let navBar = navigationController?.navigationBar {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor.primary
-            appearance.titleTextAttributes = [
-                .foregroundColor: UIColor.white,
-                .font: UIFont(name: "AvenirNext-DemiBold", size: 18)!
-            ]
-            navBar.standardAppearance = appearance
-            navBar.scrollEdgeAppearance = appearance
-        }
-    }
-    
     // MARK: - Action Methods
     @objc func openSearch() {
         DispatchQueue.main.async {
